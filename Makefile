@@ -1,13 +1,8 @@
 .PHONY: full
-full: build_master build_docker
-
-.PHONY: build_master
-build master:
-	go build -v ./cmd/master
+full: build_docker
 
 .PHONY: build_docker
-build docker:
-	@chmod a+x ./scripts/build.sh
+build_docker:
 	@./scripts/build.sh
 
 .PHONY: test
