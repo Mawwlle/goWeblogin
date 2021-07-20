@@ -9,7 +9,7 @@ services:
     labels:
       - "database"
     ports:
-      - 5433:5432
+      - "5432"
     volumes:
       - /opt/postgresql/logdata:/var/lib/postgresql/data
 
@@ -24,6 +24,8 @@ services:
     image: weblogin/master
   #  env_file:
   #    - ".env"
+    ports:
+      - "9000"
     labels:
       - "app"
     depends_on:

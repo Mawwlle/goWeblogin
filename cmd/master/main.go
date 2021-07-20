@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
-	"log"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 type User struct {
@@ -12,15 +12,6 @@ type User struct {
 	Email         string
 	EncryptedPass string
 }
-
-func NewUser() *User {
-	return &User{
-		Email:         "aboba@amogus",
-		EncryptedPass: "lolkek",
-	}
-}
-
-var databaseUrl = "postgres://testuser:1111@localhost/testmooc?sslmode=disable"
 
 // ErrorState Function checking error state and shutting down program if state is err
 func ErrorState(err error) {
@@ -40,28 +31,38 @@ func CheckDataBaseConn(db *sql.DB) error {
 }
 
 func main() {
-	db, err := sql.Open("postgres", databaseUrl)
-	ErrorState(err)
-	defer func(db *sql.DB) {
-		err := db.Close()
+	dbAddr := "0.0.0.0:5432"
+	conn, err := ConnDB("passwd", dbAddr, "master")
+	if err != nil {
+		ErrorState(err)
+	}
+	defer func(conn *sql.DB) {
+		err := conn.Close()
 		if err != nil {
 			ErrorState(err)
 		}
-	}(db)
+	}(conn)
 
-	err = CheckDataBaseConn(db)
+	err = CheckDataBaseConn(conn)
 	if err != nil {
 		ErrorState(err)
 	}
 
-	u := NewUser()
-	err = db.QueryRow(
-		"INSERT INTO users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
-		u.Email,
-		u.EncryptedPass,
-	).Scan(&u.Id)
+	query := `CREATE TABLE IF NOT EXISTS users (
+		id bigserial not null primary key,
+		email varchar not null unique,
+		encrypted_password varchar not null
+	);`
+
+	_, err = conn.Exec(query)
 	if err != nil {
-		ErrorState(err)
+		log.Warning(err)
+		time.Sleep(10 * time.Second)
+
+		_, err = conn.Exec(query)
+		if err != nil {
+			log.Warning(err)
+		}
 	}
-	fmt.Printf("User with %v added", u.Id)
+
 }
