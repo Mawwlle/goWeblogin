@@ -2,11 +2,25 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"log"
 )
 
-var database_url = "postgres://testuser:testpassword@localhost/testmooc?sslmode=disable"
+type User struct {
+	Id            int64
+	Email         string
+	EncryptedPass string
+}
+
+func NewUser() *User {
+	return &User{
+		Email:         "aboba@amogus",
+		EncryptedPass: "lolkek",
+	}
+}
+
+var databaseUrl = "postgres://testuser:1111@localhost/testmooc?sslmode=disable"
 
 // ErrorState Function checking error state and shutting down program if state is err
 func ErrorState(err error) {
@@ -26,7 +40,7 @@ func CheckDataBaseConn(db *sql.DB) error {
 }
 
 func main() {
-	db, err := sql.Open("postgres", database_url)
+	db, err := sql.Open("postgres", databaseUrl)
 	ErrorState(err)
 	defer func(db *sql.DB) {
 		err := db.Close()
@@ -39,5 +53,15 @@ func main() {
 	if err != nil {
 		ErrorState(err)
 	}
-	// ... use db here
+
+	u := NewUser()
+	err = db.QueryRow(
+		"INSERT INTO users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
+		u.Email,
+		u.EncryptedPass,
+	).Scan(&u.Id)
+	if err != nil {
+		ErrorState(err)
+	}
+	fmt.Printf("User with %v added", u.Id)
 }

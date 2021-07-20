@@ -1,0 +1,30 @@
+# This is a docker-compose file for development. See in release production file.
+version: "3.7"
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: example
+    labels:
+      - "database"
+    ports:
+      - 5433:5432
+    volumes:
+      - /opt/postgresql/logdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  # Master
+  master:
+    image: weblogin/master
+  #  env_file:
+  #    - ".env"
+    labels:
+      - "app"
+    depends_on:
+      - db
