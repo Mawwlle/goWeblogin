@@ -18,8 +18,14 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Build
-      run: go build -v ./...
+    - name: Mod init
+      run: go mod init
 
-    - name: Test
-      run: go test -v ./...
+    - name: Mod tidy
+      run: go mod tidy
+
+    - name: Build
+      run: go build -v ./go-weblogin
+#
+#    - name: Test
+#      run: go test -v ./...
