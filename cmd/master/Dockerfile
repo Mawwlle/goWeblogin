@@ -6,7 +6,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 
-COPY *.go .
+COPY . ./
+
 
 RUN go build -o /my-docker-app
+EXPOSE 1323
 CMD [ "/my-docker-app" ]

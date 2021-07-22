@@ -1,68 +1,46 @@
 package main
 
 import (
-	"database/sql"
-	_ "github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
-	"time"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/sirupsen/logrus"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-type User struct {
-	Id            int64
-	Email         string
-	EncryptedPass string
-}
-
-// ErrorState Function checking error state and shutting down program if state is err
-func ErrorState(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// CheckDataBaseConn DataBase conn use lazy creating, cause this
-//function ping db and return error if status unavailable
-func CheckDataBaseConn(db *sql.DB) error {
-	err := db.Ping()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func main() {
-	dbAddr := "0.0.0.0:5432"
-	conn, err := ConnDB("passwd", dbAddr, "master")
+	e := echo.New()
+	e.Use(middleware.Logger(), middleware.Recover())
+
+	config := NewConfig()
+	appSetting := Setting()
+	application, err := NewApp(config)
 	if err != nil {
-		ErrorState(err)
+		logrus.WithError(err).Panic("create app")
 	}
-	defer func(conn *sql.DB) {
-		err := conn.Close()
-		if err != nil {
-			ErrorState(err)
+
+	defer shutdownApp(application)
+
+	server := &http.Server{
+		Addr:    appSetting.serverAddr,
+		Handler: e,
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	// Initializing the server in a goroutine so that
+	// it won't block the graceful shutdown handling below
+	go func() {
+		logrus.Infof("start HTTP server: %v", appSetting.serverAddr)
+
+		if err := server.ListenAndServe(); err != nil {
+			logrus.WithError(err).Warn("server shutdown")
 		}
-	}(conn)
+	}()
 
-	err = CheckDataBaseConn(conn)
-	if err != nil {
-		ErrorState(err)
-	}
-
-	query := `CREATE TABLE IF NOT EXISTS users (
-		id bigserial not null primary key,
-		email varchar not null unique,
-		encrypted_password varchar not null
-	);`
-
-	_, err = conn.Exec(query)
-	if err != nil {
-		log.Warning(err)
-		time.Sleep(10 * time.Second)
-
-		_, err = conn.Exec(query)
-		if err != nil {
-			log.Warning(err)
-		}
-	}
-
+	defer shutdownServer(server)
+	<-quit
 }

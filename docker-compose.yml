@@ -5,28 +5,36 @@ services:
   db:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     labels:
       - "database"
     ports:
-      - "5432"
-    volumes:
-      - /opt/postgresql/logdata:/var/lib/postgresql/data
+      - 5432
 
   adminer:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - 8080
+    depends_on:
+      - db
 
   # Master
   master:
     image: weblogin/master
-  #  env_file:
-  #    - ".env"
+    env_file:
+      - ".env"
     ports:
-      - "9000"
+      - 1323
     labels:
       - "app"
     depends_on:
       - db
+
+networks:
+  default:
+    name: go-weblogin
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.228.0/24"
