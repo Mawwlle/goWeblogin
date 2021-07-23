@@ -25,7 +25,7 @@ services:
     env_file:
       - ".env"
     ports:
-      - 1323
+      - 1323:1323
     labels:
       - "app"
     depends_on:

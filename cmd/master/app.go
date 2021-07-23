@@ -49,17 +49,6 @@ func NewApp(cfg *Config) (*App, error) {
 		logrus.Info(err.Error())
 	}
 
-	//u := NewUser()
-	//err = db.QueryRow(context.Background(),
-	//	"INSERT INTO users (email, encrypted_password) VALUES ($1, $2) RETURNING id",
-	//	u.Email,
-	//	u.EncPass,
-	//).Scan(&u.Id)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//logrus.Infof("INTO table users has been added user with %v id %s email and password", u.Id, u.Email)
-
 	app := &App{
 		cfg:        *cfg,
 		dbConn:     db,

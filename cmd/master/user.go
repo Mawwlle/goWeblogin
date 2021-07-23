@@ -8,7 +8,7 @@ type User struct {
 
 func NewUser() *User {
 	return &User{
-		Email:   "TEST",
+		Email:   "TEST123",
 		EncPass: "USER",
 	}
 }

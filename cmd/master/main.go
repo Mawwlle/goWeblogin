@@ -11,8 +11,6 @@ import (
 )
 
 func main() {
-	e := echo.New()
-	e.Use(middleware.Logger(), middleware.Recover())
 
 	config := NewConfig()
 	appSetting := Setting()
@@ -22,6 +20,10 @@ func main() {
 	}
 
 	defer shutdownApp(application)
+
+	e := echo.New()
+	e.Use(middleware.Logger(), middleware.Recover())
+	Routes(e, application)
 
 	server := &http.Server{
 		Addr:    appSetting.serverAddr,
