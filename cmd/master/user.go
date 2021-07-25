@@ -5,10 +5,3 @@ type User struct {
 	Email   string
 	EncPass string
 }
-
-func NewUser() *User {
-	return &User{
-		Email:   "TEST123",
-		EncPass: "USER",
-	}
-}

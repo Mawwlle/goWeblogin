@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (a *App) Shutdown(ctx context.Context) error {
+func (a *App) Shutdown() error {
 	logrus.Info("shutdown app")
 	a.dbConn.Close()
 
@@ -26,12 +26,11 @@ func shutdownServer(server *http.Server) {
 }
 
 func shutdownApp(application *App) {
-	// The context is used to close open connection to DB
-	ctxApp, cancel := context.WithTimeout(context.Background(), shutdownAppTimeout)
+	_, cancel := context.WithTimeout(context.Background(), shutdownAppTimeout)
 	defer cancel()
 	logrus.Warning("shutting down app...")
 
-	if err := application.Shutdown(ctxApp); err != nil {
+	if err := application.Shutdown(); err != nil {
 		logrus.Warning("app forced to shutdown:", err)
 	}
 }

@@ -10,7 +10,6 @@ func Routes(e *echo.Echo, app *App) {
 		return context.JSON(
 			http.StatusCreated, "If you see this message, then all works good")
 	})
-	u := NewUser()
-	e.GET("/adduser", Adder(*app, u))
-	e.GET("/getuser", Getter(*app, u))
+	e.POST("/adduser", Adder(*app))
+	e.POST("/getuser", Getter(*app))
 }
