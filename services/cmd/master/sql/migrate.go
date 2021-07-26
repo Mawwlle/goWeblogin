@@ -1,4 +1,4 @@
-package main
+package sql
 
 import (
 	"github.com/golang-migrate/migrate/v4"
@@ -6,8 +6,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func Migrate(url string) error {
-	m, err := migrate.New("file:///app/sql/migrations", url)
+func Migrate(addr string) error {
+	m, err := migrate.New("file:///app/sql/migrations", addr)
 	if err != nil {
 		return err
 	}

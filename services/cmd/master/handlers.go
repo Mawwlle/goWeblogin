@@ -10,6 +10,7 @@ import (
 	"strconv"
 )
 
+// FindInDb looking for a user in the database by ID
 func FindInDb(app App, u *User) error {
 	err := app.dbConn.QueryRow(context.Background(),
 		"SELECT id, email, encrypted_password FROM users WHERE id = $1",
@@ -28,6 +29,7 @@ func FindInDb(app App, u *User) error {
 	return nil
 }
 
+// Adder parses json and adds user to database
 func Adder(app App) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		data := make(map[string]string)
@@ -41,7 +43,7 @@ func Adder(app App) echo.HandlerFunc {
 		err := FindInDb(app, u)
 		if err != nil {
 			logrus.Infof("User already exist!")
-			return err
+			return c.JSON(http.StatusConflict, err)
 		}
 
 		err = app.dbConn.QueryRow(context.Background(),
@@ -50,47 +52,54 @@ func Adder(app App) echo.HandlerFunc {
 			u.EncPass,
 		).Scan(&u.Id)
 		if err != nil {
-			return err
+			return c.JSON(http.StatusInternalServerError, err)
 		}
-		result := fmt.Sprintf("Into table users has been added user with %v id %s email and password", u.Id, u.Email)
+
+		result := fmt.Sprintf(
+			"Into table users has been added user with %v id %s email and password %s",
+			u.Id,
+			u.Email,
+			u.EncPass,
+		)
+
 		logrus.Infof(result)
-		newData, err := json.MarshalIndent(u, "", "\t")
-		fmt.Printf("%s", newData)
+		out, err := json.MarshalIndent(u, "", "\t")
+		fmt.Printf("%s", out)
 		if err != nil {
-			return err
+			return c.JSON(http.StatusInternalServerError, err)
 		}
-		return c.String(http.StatusCreated, result)
+
+		return c.JSON(http.StatusCreated, u)
 	}
 }
 
+// Getter parses json and recieve user from database
 func Getter(app App) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		u := new(User)
-		data := make(map[string]string)
-		if err := c.Bind(&data); err != nil {
-			return err
-		}
-		i, err := strconv.Atoi(data["ID"])
+		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return err
+			return c.JSON(http.StatusInternalServerError, err)
 		}
-		u.Id = i
+		u.Id = id
+
 		if err := FindInDb(app, u); err != nil {
-			return err
+			return c.JSON(http.StatusConflict, err)
 		}
 		logrus.Infof("User's email with %v id is %s", u.Id, u.Email)
 
-		newData, err := json.MarshalIndent(u, "", "\t")
-		result := fmt.Sprintf("Into table users has been added user with %v id %s email and password %s",
+		out, err := json.MarshalIndent(u, "", "\t")
+		result := fmt.Sprintf("Into table users has been added user with %v id %s email\n %s",
 			u.Id,
 			u.Email,
-			newData)
+			out)
+
 		logrus.Infof(result)
-		fmt.Printf("%s", newData)
+		fmt.Printf("%s", out)
 		if err != nil {
-			return err
+			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		return c.String(http.StatusOK, result)
+		return c.JSON(http.StatusOK, u)
 	}
 }

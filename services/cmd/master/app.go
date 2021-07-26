@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
+	"go-weblogin/sql"
 	"net/http"
 	"os"
 	"time"
@@ -17,6 +18,7 @@ type App struct {
 	httpClient *http.Client
 }
 
+// NewApp create instance of App
 func NewApp(cfg *Config) (*App, error) {
 	var (
 		db  *pgxpool.Pool
@@ -29,8 +31,8 @@ func NewApp(cfg *Config) (*App, error) {
 		os.Getenv("DB_ADDR"),
 	)
 
-	sleep := 10 * time.Second
-	for retry := 10; ; retry-- {
+	sleep := 15 * time.Second
+	for retry := 3; ; retry-- {
 		db, err = pgxpool.Connect(context.Background(), connStr)
 		if err != nil {
 			logrus.WithError(err).Warnf("can't connect to db=%s", connStr)
@@ -44,7 +46,7 @@ func NewApp(cfg *Config) (*App, error) {
 
 	logrus.Trace("create app")
 
-	err = Migrate(cfg.PostgresURL)
+	err = sql.Migrate(cfg.PostgresURL)
 	if err != nil {
 		logrus.Info(err.Error())
 	}

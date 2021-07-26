@@ -12,8 +12,10 @@ import (
 
 func main() {
 
-	config := NewConfig()
+	config := NewConfig() //Configuration of application (database connection)
 	appSetting := Setting()
+	setupLog()
+
 	application, err := NewApp(config)
 	if err != nil {
 		logrus.WithError(err).Panic("create app")

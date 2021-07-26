@@ -11,5 +11,5 @@ func Routes(e *echo.Echo, app *App) {
 			http.StatusCreated, "If you see this message, then all works good")
 	})
 	e.POST("/adduser", Adder(*app))
-	e.POST("/getuser", Getter(*app))
+	e.GET("/getuser/:id", Getter(*app))
 }

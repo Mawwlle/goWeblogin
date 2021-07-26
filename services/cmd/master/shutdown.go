@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-func (a *App) Shutdown() error {
-	logrus.Info("shutdown app")
-	a.dbConn.Close()
+func shutdownApp(application *App) {
+	_, cancel := context.WithTimeout(context.Background(), shutdownAppTimeout)
+	defer cancel()
+	logrus.Warning("shutting down app...")
 
-	return nil
+	application.dbConn.Close() // terminating open connections
 }
 
 func shutdownServer(server *http.Server) {
@@ -22,15 +23,5 @@ func shutdownServer(server *http.Server) {
 
 	if err := server.Shutdown(ctxServer); err != nil {
 		logrus.Warning("server forced to shutdown:", err)
-	}
-}
-
-func shutdownApp(application *App) {
-	_, cancel := context.WithTimeout(context.Background(), shutdownAppTimeout)
-	defer cancel()
-	logrus.Warning("shutting down app...")
-
-	if err := application.Shutdown(); err != nil {
-		logrus.Warning("app forced to shutdown:", err)
 	}
 }
